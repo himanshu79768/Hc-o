@@ -1,23 +1,35 @@
-self.addEventListener('install', event => {
-    console.log('Service Worker installed');
+self.addEventListener('install', function(event) {
+    console.log('Service Worker installing.');
 });
 
-self.addEventListener('activate', event => {
-    console.log('Service Worker activated');
+self.addEventListener('activate', function(event) {
+    console.log('Service Worker activating.');
 });
 
-self.addEventListener('push', event => {
-    const options = {
-        body: 'This is a push notification from your PWA!',
-        icon: '/icon.png',
-        vibrate: [100, 50, 100],
-        data: {
-            dateOfArrival: Date.now(),
-            primaryKey: 1
-        }
+self.addEventListener('push', function(event) {
+    console.log('Push message received:', event);
+    let notificationTitle = 'New Notification';
+    let notificationOptions = {
+        body: 'You have a new notification.',
+        icon: 'icon-192x192.png',
+        badge: 'icon-192x192.png'
     };
 
+    if (event.data) {
+        let data = event.data.json();
+        notificationTitle = data.title;
+        notificationOptions.body = data.body;
+    }
+
     event.waitUntil(
-        self.registration.showNotification('Push Notification', options)
+        self.registration.showNotification(notificationTitle, notificationOptions)
+    );
+});
+
+self.addEventListener('notificationclick', function(event) {
+    console.log('Notification click received.');
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow('https://your-site-url.com')
     );
 });

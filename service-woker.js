@@ -1,8 +1,8 @@
-const CACHE_NAME = 'my-pwa-cache-v4';
+const CACHE_NAME = 'my-pwa-cache-v5';
 const urlsToCache = [
     '/',
     '/index.html',
-    '/icon.png'
+    'https://s3.ezgif.com/tmp/ezgif-3-092ebae015.png'
 ];
 
 self.addEventListener('install', event => {
@@ -48,9 +48,8 @@ self.addEventListener('push', event => {
     console.log('Service Worker: Push received', event);
     const title = 'Push Notification';
     const options = {
-        body: event.data.text(),
-        icon: 'icon.png'
+        body: event.data ? event.data.text() : 'Default notification message',
+        icon: 'https://s3.ezgif.com/tmp/ezgif-3-092ebae015.png'
     };
-
     event.waitUntil(self.registration.showNotification(title, options));
 });

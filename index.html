@@ -3,23 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My PWA with Notifications</title>
+    <title>My PWA with Timer and Notifications</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="https://s3.ezgif.com/tmp/ezgif-3-092ebae015.png" type="image/png">
+    <link rel="icon" href="icon.png" type="image/png">
+    <style>
+        #timer {
+            font-size: 24px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <h1>Welcome to My PWA</h1>
-    <p>This is a Progressive Web App with push notifications.</p>
-    <button id="doneButton">Done</button>
+    <p>This is a Progressive Web App with a timer and push notifications.</p>
+    <button id="startButton">Start Timer</button>
+    <div id="timer"></div>
 
     <script>
+        let swRegistration = null;
+
         // Register the service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('service-worker.js')
                     .then(registration => {
                         console.log('Service Worker registered successfully:', registration.scope);
-                        initializePushNotifications(registration);
+                        swRegistration = registration;
+                        initializeApp();
                     })
                     .catch(error => {
                         console.log('Service Worker registration failed:', error);
@@ -27,20 +38,45 @@
             });
         }
 
-        function initializePushNotifications(registration) {
-            const doneButton = document.getElementById('doneButton');
-            doneButton.addEventListener('click', () => {
+        function initializeApp() {
+            const startButton = document.getElementById('startButton');
+            const timerDisplay = document.getElementById('timer');
+            
+            startButton.addEventListener('click', () => {
                 Notification.requestPermission().then(permission => {
                     if (permission === 'granted') {
-                        setTimeout(() => {
-                            registration.showNotification('Task Completed', {
-                                body: 'Your task has been completed successfully!',
-                                icon: 'icon.png'
-                            });
-                        }, 10000); // 10 seconds delay
+                        startTimer(20, timerDisplay);
+                    } else {
+                        alert('Notification permission is required for this app to work properly.');
                     }
                 });
             });
+        }
+
+        function startTimer(duration, display) {
+            display.style.display = 'block';
+            let timer = duration, seconds;
+            const countdown = setInterval(function () {
+                seconds = parseInt(timer % 60, 10);
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = seconds + " seconds remaining";
+
+                if (--timer < 0) {
+                    clearInterval(countdown);
+                    display.textContent = "Time's up!";
+                    sendNotification();
+                }
+            }, 1000);
+        }
+
+        function sendNotification() {
+            if (swRegistration) {
+                swRegistration.showNotification('Timer Completed', {
+                    body: 'Your 20-second timer has finished!',
+                    icon: 'icon.png'
+                });
+            }
         }
     </script>
 </body>

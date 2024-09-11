@@ -1,9 +1,8 @@
-const CACHE_NAME = 'my-pwa-cache-v2';
+const CACHE_NAME = 'my-pwa-cache-v3';
 const urlsToCache = [
     '/',
     '/index.html',
-    '/manifest.json',
-    '/https://s3.ezgif.com/tmp/ezgif-3-092ebae015.png'
+    '/icon.png'
 ];
 
 self.addEventListener('install', event => {
@@ -20,18 +19,9 @@ self.addEventListener('fetch', event => {
     );
 });
 
-self.addEventListener('push', event => {
-    const options = {
-        body: event.data.text(),
-        icon: 'icon.png',
-        vibrate: [100, 50, 100],
-        data: {
-            dateOfArrival: Date.now(),
-            primaryKey: 1
-        }
-    };
-
-    event.waitUntil(
-        self.registration.showNotification('Push Notification', options)
-    );
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    // You can define actions to take when the notification is clicked
+    // For now, we'll just log a message
+    console.log('Notification clicked');
 });

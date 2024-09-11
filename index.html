@@ -12,6 +12,13 @@
             margin-top: 20px;
             display: none;
         }
+        #log {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -19,41 +26,59 @@
     <p>This is a Progressive Web App with a timer and push notifications.</p>
     <button id="startButton">Start Timer</button>
     <div id="timer"></div>
+    <div id="log"></div>
 
     <script>
         let swRegistration = null;
 
+        function log(message) {
+            console.log(message);
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += message + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
         // Register the service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
+                log('Window loaded. Attempting to register service worker...');
                 navigator.serviceWorker.register('service-worker.js')
                     .then(registration => {
-                        console.log('Service Worker registered successfully:', registration.scope);
+                        log('Service Worker registered successfully: ' + registration.scope);
                         swRegistration = registration;
                         initializeApp();
                     })
                     .catch(error => {
-                        console.log('Service Worker registration failed:', error);
+                        log('Service Worker registration failed: ' + error);
                     });
             });
+        } else {
+            log('Service workers are not supported in this browser.');
         }
 
         function initializeApp() {
+            log('Initializing app...');
             const startButton = document.getElementById('startButton');
             const timerDisplay = document.getElementById('timer');
             
             startButton.addEventListener('click', () => {
+                log('Start button clicked.');
                 Notification.requestPermission().then(permission => {
+                    log('Notification permission status: ' + permission);
                     if (permission === 'granted') {
                         startTimer(20, timerDisplay);
                     } else {
+                        log('Notification permission is required for this app to work properly.');
                         alert('Notification permission is required for this app to work properly.');
                     }
+                }).catch(error => {
+                    log('Error requesting notification permission: ' + error);
                 });
             });
         }
 
         function startTimer(duration, display) {
+            log('Starting timer for ' + duration + ' seconds.');
             display.style.display = 'block';
             let timer = duration, seconds;
             const countdown = setInterval(function () {
@@ -61,10 +86,12 @@
                 seconds = seconds < 10 ? "0" + seconds : seconds;
 
                 display.textContent = seconds + " seconds remaining";
+                log(seconds + ' seconds remaining');
 
                 if (--timer < 0) {
                     clearInterval(countdown);
                     display.textContent = "Time's up!";
+                    log("Timer finished. Sending notification...");
                     sendNotification();
                 }
             }, 1000);
@@ -72,10 +99,17 @@
 
         function sendNotification() {
             if (swRegistration) {
+                log('Attempting to send notification...');
                 swRegistration.showNotification('Timer Completed', {
                     body: 'Your 20-second timer has finished!',
                     icon: 'icon.png'
+                }).then(() => {
+                    log('Notification sent successfully.');
+                }).catch(error => {
+                    log('Error sending notification: ' + error);
                 });
+            } else {
+                log('Service worker registration not found. Cannot send notification.');
             }
         }
     </script>

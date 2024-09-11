@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Test App</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        button { margin: 10px 0; padding: 10px; }
+        #status { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>PWA Test App</h1>
+    <p>This app tests PWA functionality and installation.</p>
+
+    <button id="install-btn" style="display: none;">Install PWA</button>
+    <button id="check-online">Check Online Status</button>
+    <button id="clear-cache">Clear Cache</button>
+    <button id="update-sw">Update Service Worker</button>
+
+    <div id="status"></div>
+
+    <script>
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+        const statusDiv = document.getElementById('status');
+
+        // Check if the app is installed
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            statusDiv.textContent = 'The app is installed and running in standalone mode.';
+        }
+
+        // PWA installation
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    statusDiv.textContent = 'PWA installation accepted!';
+                } else {
+                    statusDiv.textContent = 'PWA installation dismissed.';
+                }
+                deferredPrompt = null;
+                installBtn.style.display = 'none';
+            }
+        });
+
+        // Online status check
+        document.getElementById('check-online').addEventListener('click', () => {
+            statusDiv.textContent = navigator.onLine ? 'Online' : 'Offline';
+        });
+
+        // Clear cache
+        document.getElementById('clear-cache').addEventListener('click', async () => {
+            try {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+                statusDiv.textContent = 'Cache cleared successfully.';
+            } catch (error) {
+                statusDiv.textContent = `Error clearing cache: ${error}`;
+            }
+        });
+
+        // Update service worker
+        document.getElementById('update-sw').addEventListener('click', async () => {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        await registration.update();
+                        statusDiv.textContent = 'Service Worker updated successfully.';
+                    } else {
+                        statusDiv.textContent = 'No Service Worker registration found.';
+                    }
+                } catch (error) {
+                    statusDiv.textContent = `Error updating Service Worker: ${error}`;
+                }
+            } else {
+                statusDiv.textContent = 'Service Workers are not supported in this browser.';
+            }
+        });
+
+        // Service Worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered successfully:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My PWA with Timer and Notifications</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="icon" href="https://s3.ezgif.com/tmp/ezgif-3-092ebae015.png" type="image/png">
     <style>
         #timer {
             font-size: 24px;
@@ -50,6 +50,17 @@
                     })
                     .catch(error => {
                         log('Service Worker registration failed: ' + error);
+                        // Attempt to fetch the service worker file to check its status
+                        fetch('service-worker.js')
+                            .then(response => {
+                                log('Service worker file fetch status: ' + response.status);
+                                if (!response.ok) {
+                                    log('Service worker file is not being served correctly. Check your server configuration.');
+                                }
+                            })
+                            .catch(fetchError => {
+                                log('Error fetching service worker file: ' + fetchError);
+                            });
                     });
             });
         } else {
@@ -102,7 +113,7 @@
                 log('Attempting to send notification...');
                 swRegistration.showNotification('Timer Completed', {
                     body: 'Your 20-second timer has finished!',
-                    icon: 'icon.png'
+                    icon: 'https://s3.ezgif.com/tmp/ezgif-3-092ebae015.png'
                 }).then(() => {
                     log('Notification sent successfully.');
                 }).catch(error => {
